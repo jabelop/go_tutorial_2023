@@ -36,3 +36,22 @@ func (a *Account) Withdraw(amount float64) error {
 func (a *Account) Statement() string {
 	return fmt.Sprintf("%v - %v - %v", a.Number, a.Name, a.Balance)
 }
+
+func (origin *Account) Transfer(destination *Account, amount float64) error {
+	err := origin.Withdraw(amount)
+                if err != nil {
+                    //fmt.Fprintf(w, "%v", err)
+					return err
+                } else {
+                    //fmt.Fprintf(w, origin.Statement())
+                    err := destination.Deposit(amount)
+                    if err != nil {
+                        //fmt.Fprintf(w, "%v", err)
+                        origin.Deposit(amount)
+						return err
+                    } else {
+                        //fmt.Fprintf(w, destination.Statement())
+						return nil
+                    }
+                }
+}

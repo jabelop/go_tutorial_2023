@@ -109,28 +109,19 @@ func transfer(w http.ResponseWriter, req *http.Request) {
     } else if amount, err := strconv.ParseFloat(amountqs, 64); err != nil {
         fmt.Fprintf(w, "Invalid amount number!")
     } else {         
-        destinationAccount, ok := accounts[destinationNumber]
-        if !ok {
+        originAccount, okOrigin := accounts[originNumber]
+        destinationAccount, okDestination := accounts[destinationNumber]
+
+        if !okOrigin {
+            fmt.Fprintf(w, "Account with number %v can't be found!", originNumber)
+        } else if !okDestination {
             fmt.Fprintf(w, "Account with number %v can't be found!", destinationNumber)
         } else {
-            originAccount, ok := accounts[originNumber]
-            if !ok {
-                fmt.Fprintf(w, "Account with number %v can't be found!", originNumber)
+            errTransfer := originAccount.Transfer(destinationAccount, amount)
+            if errTransfer != nil {
+                fmt.Fprintf(w, "Error: $%v", errTransfer)
             } else {
-                log.Print(amount)
-                err := originAccount.Withdraw(amount)
-                if err != nil {
-                    fmt.Fprintf(w, "%v", err)
-                } else {
-                    fmt.Fprintf(w, originAccount.Statement())
-                    err := destinationAccount.Deposit(amount)
-                    if err != nil {
-                        fmt.Fprintf(w, "%v", err)
-                        originAccount.Deposit(amount)
-                    } else {
-                        fmt.Fprintf(w, destinationAccount.Statement())
-                    }
-                }
+                fmt.Fprintf(w, "%v => %s | %v => %s",originNumber, originAccount.Statement(), destinationNumber, destinationAccount.Statement())
             }
         }
     }
